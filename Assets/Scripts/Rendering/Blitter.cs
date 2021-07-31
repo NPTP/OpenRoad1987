@@ -1,11 +1,10 @@
-using System;
 using UnityEngine;
  
 [ExecuteInEditMode]
 public class Blitter : MonoBehaviour
 {
     [SerializeField] private RenderTexture sourceTexture;
-    [SerializeField] private int targetFramerate = 30;
+    [SerializeField] private int targetFramerate = 16;
 
     private void Awake()
     {
