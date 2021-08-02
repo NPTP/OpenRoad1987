@@ -1,18 +1,21 @@
 using UnityEngine;
- 
-[ExecuteInEditMode]
-public class Blitter : MonoBehaviour
+
+namespace Rendering
 {
-    [SerializeField] private RenderTexture sourceTexture;
-    [SerializeField] private int targetFramerate = 16;
-
-    private void Awake()
+    [ExecuteInEditMode]
+    public class Blitter : MonoBehaviour
     {
-        Application.targetFrameRate = targetFramerate;
-    }
+        [SerializeField] private RenderTexture sourceTexture;
+        [SerializeField] private int targetFramerate = 16;
 
-    private void OnRenderImage(RenderTexture src, RenderTexture dest)
-    {
-        Graphics.Blit(sourceTexture, dest);
+        private void Awake()
+        {
+            Application.targetFrameRate = targetFramerate;
+        }
+
+        private void OnRenderImage(RenderTexture src, RenderTexture dest)
+        {
+            Graphics.Blit(sourceTexture, dest);
+        }
     }
 }

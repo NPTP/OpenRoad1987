@@ -14,14 +14,14 @@ namespace Systems
     {
         private const float AXIS_EPSILON = 0.1f;
         
-        private static int horizontal = 0;
-        public static int Horizontal => horizontal;
-        private static int vertical = 0;
-        public static int Vertical => vertical;
+        private int horizontal = 0;
+        public int Horizontal => horizontal;
+        private int vertical = 0;
+        public int Vertical => vertical;
 
-        private void Update()
+        public void RunInputCollection()
         {
-            float axisHorizontal = Input.GetAxis("Horizontal");
+            float axisHorizontal = Input.GetAxisRaw("Horizontal");
             if (axisHorizontal > AXIS_EPSILON) horizontal = 1;
             else if (axisHorizontal < -AXIS_EPSILON) horizontal = -1;
             else horizontal = 0;

@@ -3,49 +3,85 @@ using UnityEngine;
 
 namespace Movement
 {
+    [RequireComponent(typeof(InputController))]
     public class PlayerMovement : MonoBehaviour
     {
-        private float accelerationPerSecond = 4.0f;
-        private float decelerationPerSecond = 8.0f;
-        private float topSpeed = 20.0f;
-        private float turnSpeed = 20.0f;
-        private float topTurnSpeed = 90.0f;
+        private float topSpeed = 1.5f;
+        private float topSteerSpeed = 6.0f;
+        
+        [SerializeField] private AnimationCurve accelerationCurve;
+        private float AccelSpeed => accelerationCurve.Evaluate(gasCurveMarker.Get()) * topSpeed;
+        public float AccelCurve => accelerationCurve.Evaluate(gasCurveMarker.Get());
+        
+        [SerializeField] private AnimationCurve brakingCurve;
+        private float BrakeSpeed => brakingCurve.Evaluate(gasCurveMarker.Get()) * topSpeed;
+        
+        [SerializeField] private AnimationCurve steerCurve;
+        private float SteerSpeed => steerCurve.Evaluate(steerCurveMarker.Get()) * topSteerSpeed;
 
-        private float currentSpeed = 0.0f;
-        private int lastThrustSign = 0;
+        private int steerDirection = 0;
+
+        private CurveMarker gasCurveMarker = new CurveMarker();
+        private CurveMarker steerCurveMarker = new CurveMarker();
+        
+        private InputController inputController;
+        
+        // Values must be within the interval [0.0, 1.0]
+        private float accelerationPerSecond = 0.3f;
+        private float decelerationPerSecond = 0.05f;
+        private float brakeSlowPerSecond = 0.8f;
+        private float steerPerSecond = 0.5f;
+        private float recenterPerSecond = 2.0f;
+
+        private void Awake()
+        {
+            inputController = GetComponent<InputController>();
+        }
 
         private void Update()
         {
-            Steering();
+            inputController.RunInputCollection();
             GasAndBrake();
-        }
-
-        private void Steering()
-        {
-            if (InputController.Horizontal == 0 || currentSpeed == 0.0f) return;
-
-            int rotateSign = 1;
-            if (lastThrustSign == -1) rotateSign = -1;
-
-            float effectiveTurnSpeed = Mathf.Clamp(turnSpeed * currentSpeed, 0.0f, topTurnSpeed);
-            
-            transform.Rotate(Vector3.up * (rotateSign * InputController.Horizontal * effectiveTurnSpeed * Time.deltaTime), Space.Self);
+            Steering();
+            print($"Gas: {gasCurveMarker}, Steer: {steerCurveMarker}");
         }
 
         private void GasAndBrake()
         {
-            if (InputController.Vertical == 0)
+            if (inputController.Vertical == 0)
             {
-                currentSpeed -= decelerationPerSecond * Time.deltaTime;
+                gasCurveMarker.Subtract(decelerationPerSecond * Time.deltaTime);
             }
-            else
+            else if (inputController.Vertical == 1)
             {
-                currentSpeed += accelerationPerSecond * Time.deltaTime;
-                lastThrustSign = InputController.Vertical;
+                gasCurveMarker.Add(accelerationPerSecond * Time.deltaTime);
+            }
+            else if (inputController.Vertical == -1)
+            {
+                gasCurveMarker.Subtract(brakeSlowPerSecond * Time.deltaTime);
             }
             
-            currentSpeed = Mathf.Clamp(currentSpeed, 0.0f, topSpeed);
-            transform.position += transform.forward * (lastThrustSign * (currentSpeed * Time.deltaTime));
+            transform.position += transform.forward * AccelSpeed;
+        }
+
+        private void Steering()
+        {
+            if (inputController.Horizontal == 0)
+            {
+                steerCurveMarker.Subtract(recenterPerSecond * Time.deltaTime);
+            }
+            else if (inputController.Horizontal == 1)
+            {
+                steerDirection = 1;
+                steerCurveMarker.Add(steerPerSecond * Time.deltaTime);
+            }
+            else if (inputController.Horizontal == -1)
+            {
+                steerDirection = -1;
+                steerCurveMarker.Add(steerPerSecond * Time.deltaTime);
+            }
+            
+            transform.Rotate(Vector3.up * (steerDirection * SteerSpeed));
         }
     }
 }
